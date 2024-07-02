@@ -47,9 +47,15 @@ float calculateShadow() {
     return shadow;
 }
 
+// vec3 calculateNormal() {
+    
+// }
+
 void main(void) {
 
     // float illumination = 0.1 + max(0.0, -dot(lightDir, pNormal)) * 0.9;
+    // vec3 cNormal = 
+
     float illumination = 0.1 + max(0.0, -dot(lightDir, normalize(pNormal))) * 0.9 * (1.0 - calculateShadow());
 
     // if(uvCoords.x < 0.03 || uvCoords.x > 0.97 || uvCoords.y < 0.03 || uvCoords.y > 0.97) {

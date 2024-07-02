@@ -31,11 +31,11 @@ export abstract class BaseShader {
 		let completed = 0;
 
 		let vertReq = new XMLHttpRequest();
-		vertReq.open("GET", "/shaders/" + name + ".vert");
+		vertReq.open("GET", "shaders/" + name + ".vert");
 		vertReq.responseType = "text";
 
 		let fragReq = new XMLHttpRequest();
-		fragReq.open("GET", "/shaders/" + name + ".frag");
+		fragReq.open("GET", "shaders/" + name + ".frag");
 		fragReq.responseType = "text";
 
 		let vertexShaderString: string;

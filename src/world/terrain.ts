@@ -32,7 +32,7 @@ export class Floor {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texImage);
             gl.generateMipmap(gl.TEXTURE_2D);
         };
-        texImage.src = "/assests/floor.png";
+        texImage.src = "assests/dirtnormal.png";
 
         this.chunks = [];
         this.midChunks = [];
