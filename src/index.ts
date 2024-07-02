@@ -117,7 +117,7 @@ function update(delta: number) {
 function renderScene(shader: BaseShader) {
 	let translation = mat4.create();
 
-	mat4.translate(translation, translation, [0, 2.5, 0]);
+	mat4.translate(translation, translation, [0, 2, 0]);
 	mat4.rotateY(translation, translation, testAngle);
 
 	shader.loadTransform(translation);

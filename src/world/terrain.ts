@@ -32,6 +32,10 @@ export class Floor {
         texImage.onload = () => {
             gl.bindTexture(gl.TEXTURE_2D, this.texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texImage);
+            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.generateMipmap(gl.TEXTURE_2D);
         };
         texImage.src = "assests/floor.png";
@@ -42,7 +46,7 @@ export class Floor {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normalImage);
             gl.generateMipmap(gl.TEXTURE_2D);
         };
-        normalImage.src = "assests/dirtnormal.png";
+        normalImage.src = "assests/dirtnormal.jpg";
 
         this.chunks = [];
         this.midChunks = [];

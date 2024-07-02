@@ -68,19 +68,7 @@ void main(void) {
 
     float quantized = floor(illumination * 10.0) / 9.0;
 
-    vec3 color;
-
-    if(fragPos.y < 0.1) {
-        if(nNormal.y > 0.8) {
-            color = vec3(1.0, 0.9, 0.6);
-        } else if(nNormal.y < 0.7) {
-            color = vec3(0.7, 0.7, 0.7);
-        } else {
-            color = mix(vec3(0.7, 0.7, 0.7), vec3(1.0, 0.9, 0.6), (nNormal.y - 0.7) * 10.0);
-        }
-    } else {
-        color = vec3(1.0);
-    }
+    vec3 color = texture(tex, vec2(nNormal.y,  -fragPos.y * 0.5 + 0.5)).rgb;
 
     // if(uvCoords.x < 0.03 || uvCoords.x > 0.97 || uvCoords.y < 0.03 || uvCoords.y > 0.97) {
     //     fragColor = vec4(vec3(0), 1.0);
