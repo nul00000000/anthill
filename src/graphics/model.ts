@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { mat2, vec2, vec3 } from "gl-matrix";
 import { BaseShader } from "./shader";
 
 export class Model {
@@ -8,12 +8,16 @@ export class Model {
 	positionVboId: WebGLBuffer;
 	normalVboId: WebGLBuffer;
 	uvsVboId: WebGLBuffer;
+	tangentsVboId: WebGLBuffer;
+	bitangentsVboId: WebGLBuffer;
 	indicesVboId: WebGLBuffer;
 
 	constructor(gl: WebGL2RenderingContext, positions: GLfloat[], uvs: GLfloat[], indices: GLint[], shadeFlat = false, normals: GLfloat[] = []) {
 		this.positionVboId = gl.createBuffer();
 		this.normalVboId = gl.createBuffer();
 		this.uvsVboId = gl.createBuffer();
+		this.tangentsVboId = gl.createBuffer();
+		this.bitangentsVboId = gl.createBuffer();
 		this.vaoId = gl.createVertexArray();
 
 		gl.bindVertexArray(this.vaoId);
@@ -34,6 +38,9 @@ export class Model {
 			n = this.calculateNormals(p, i);
 		}
 
+		let t: GLfloat[], b: GLfloat[];
+		[t, b] = this.calculateTangentBiTangent(p, uvs, i);
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionVboId);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p), gl.STATIC_DRAW);
 		gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
@@ -48,6 +55,16 @@ export class Model {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uvs), gl.STATIC_DRAW);
 		gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
 		gl.enableVertexAttribArray(2);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.tangentsVboId);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(t), gl.STATIC_DRAW);
+		gl.vertexAttribPointer(3, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(3);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.bitangentsVboId);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(b), gl.STATIC_DRAW);
+		gl.vertexAttribPointer(4, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(4);
 
 		this.indicesVboId = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indicesVboId);
@@ -105,6 +122,87 @@ export class Model {
 		}
 
 		return normals;
+	}
+
+	// out[0] is tangents out[1] is bitangents
+	calculateTangentBiTangent(positions: GLfloat[], uvs: GLfloat[], indices: GLint[]): GLfloat[][] {
+		let tangents: GLfloat[] = [];
+		let bitangents: GLfloat[] = [];
+
+		for(let i = 0; i < positions.length; i++) {
+			tangents[i] = 0;
+			bitangents[i] = 0;
+		}
+
+		for(let i = 0; i < indices.length / 3; i++) {
+			let v1Index = indices[i * 3];
+			let v2Index = indices[i * 3 + 1];
+			let v3Index = indices[i * 3 + 2];
+			let v1: vec3 = [positions[v1Index * 3], positions[v1Index * 3 + 1], positions[v1Index * 3 + 2]];
+			let v2: vec3 = [positions[v2Index * 3], positions[v2Index * 3 + 1], positions[v2Index * 3 + 2]];
+			let v3: vec3 = [positions[v3Index * 3], positions[v3Index * 3 + 1], positions[v3Index * 3 + 2]];
+			let uv1: vec2 = [uvs[v1Index * 2], uvs[v1Index * 2 + 1]];
+			let uv2: vec2 = [uvs[v2Index * 2], uvs[v2Index * 2 + 1]];
+			let uv3: vec2 = [uvs[v3Index * 2], uvs[v3Index * 2 + 1]];
+			let edge1 = vec3.sub(vec3.create(), v1, v2);
+			let edge2 = vec3.sub(vec3.create(), v3, v2);
+			let duv1 = vec2.sub(vec2.create(), uv1, uv2);
+			let duv2 = vec2.sub(vec2.create(), uv3, uv2);
+
+			let f = 1.0 / (duv1[0] * duv2[1] - duv1[1] * duv2[0]);
+
+			let tan: vec3 = [
+				f * (duv2[1] * edge1[0] - duv1[1] * edge2[0]),
+				f * (duv2[1] * edge1[1] - duv1[1] * edge2[1]),
+				f * (duv2[1] * edge1[2] - duv1[1] * edge2[2])
+			];
+
+			let bitan: vec3 = [
+				f * (duv2[0] * edge1[0] - duv1[0] * edge2[0]),
+				f * (duv2[0] * edge1[1] - duv1[0] * edge2[1]),
+				f * (duv2[0] * edge1[2] - duv1[0] * edge2[2])
+			];
+
+			vec3.normalize(tan, tan);
+			vec3.normalize(bitan, bitan);
+
+			tangents[v1Index * 3] += tan[0];
+			tangents[v1Index * 3 + 1] += tan[1];
+			tangents[v1Index * 3 + 2] += tan[2];
+			tangents[v2Index * 3] += tan[0];
+			tangents[v2Index * 3 + 1] += tan[1];
+			tangents[v2Index * 3 + 2] += tan[2];
+			tangents[v3Index * 3] += tan[0];
+			tangents[v3Index * 3 + 1] += tan[1];
+			tangents[v3Index * 3 + 2] += tan[2];
+
+			bitangents[v1Index * 3] += bitan[0];
+			bitangents[v1Index * 3 + 1] += bitan[1];
+			bitangents[v1Index * 3 + 2] += bitan[2];
+			bitangents[v2Index * 3] += bitan[0];
+			bitangents[v2Index * 3 + 1] += bitan[1];
+			bitangents[v2Index * 3 + 2] += bitan[2];
+			bitangents[v3Index * 3] += bitan[0];
+			bitangents[v3Index * 3 + 1] += bitan[1];
+			bitangents[v3Index * 3 + 2] += bitan[2];
+		}
+
+		for(let i = 0; i < tangents.length / 3; i++) {
+			let len = Math.sqrt(tangents[i * 3] * tangents[i * 3] + 
+				tangents[i * 3 + 1] * tangents[i * 3 + 1] +
+				tangents[i * 3 + 2] * tangents[i * 3 + 2]);
+			let bilen = Math.sqrt(bitangents[i * 3] * bitangents[i * 3] + 
+				bitangents[i * 3 + 1] * bitangents[i * 3 + 1] +
+				bitangents[i * 3 + 2] * bitangents[i * 3 + 2]);
+			tangents[i * 3] /= len;
+			tangents[i * 3 + 1] /= len;
+			tangents[i * 3 + 2] /= len;
+			bitangents[i * 3] /= bilen;
+			bitangents[i * 3 + 1] /= bilen;
+			bitangents[i * 3 + 2] /= bilen;
+		}
+
+		return [tangents, bitangents];
 	}
 
 	draw(shader: BaseShader) {

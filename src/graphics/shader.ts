@@ -119,6 +119,9 @@ export abstract class BaseShader {
 			case 2:
 				this.gl.activeTexture(this.gl.TEXTURE2);
 				break;
+			case 3:
+				this.gl.activeTexture(this.gl.TEXTURE3);
+				break;
 			default:
 				console.log("Invalid texture slot");
 				return;
@@ -134,10 +137,12 @@ export abstract class BaseShader {
 
 export class Shader extends BaseShader {
 	constructor(gl: WebGL2RenderingContext, setupCallback: () => void) {
-		super(gl, "shader", ["position", "normal"], ["transform", "camera", "projection", "lightSpace", "lightDir", 
-				"shadowMap", "tex"], () => {
+		super(gl, "shader", ["position", "normal", "uvs", "tangent", "bitangent"], 
+				["transform", "camera", "projection", "lightSpace", "lightDir", 
+				"shadowMap", "tex", "normalMap"], () => {
 			gl.uniform1i(this.uniforms[5], 0);
 			gl.uniform1i(this.uniforms[6], 1);
+			gl.uniform1i(this.uniforms[7], 3);
 			console.log("Main shader initialized");
 			setupCallback();
 		});
@@ -181,7 +186,7 @@ export class ShadowsShader extends BaseShader {
 
 export class WaterShader extends BaseShader {
 	constructor(gl: WebGL2RenderingContext, setupCallback: () => void) {
-		super(gl, "water", ["position", "normal"], ["transform", "camera", "projection", 
+		super(gl, "water", ["position", "normal", "uvs"], ["transform", "camera", "projection", 
 				"lightSpace", "lightDir", "time", "lightSpaceLand",
 				"shadowMap", "tex", "waterMap"], () => {
 			gl.uniform1i(this.uniforms[7], 0);

@@ -6,14 +6,16 @@ in vec3 pNormal;
 in vec2 uvCoords;
 in vec3 fragPos;
 in vec4 fragPosLightSpace;
+in mat3 TBN;
 
 out vec4 fragColor;
 
 uniform vec3 lightDir;
 uniform sampler2D shadowMap;
 uniform sampler2D tex;
+uniform sampler2D normalMap;
 
-float calculateShadow() {
+float calculateShadow(vec3 nNormal) {
     vec2 texelSize = (1.0 / vec2(textureSize(shadowMap, 0)));
     vec2 halfTexelSize = texelSize * 0.5;
 
@@ -24,7 +26,7 @@ float calculateShadow() {
     float cd1 = texture(shadowMap, projCoords.xy + vec2(1.0, -1.0) * halfTexelSize).r;
     float cd2 = texture(shadowMap, projCoords.xy + vec2(-1.0, 1.0) * halfTexelSize).r;
     float cd3 = texture(shadowMap, projCoords.xy + vec2(1.0, 1.0) * halfTexelSize).r;
-    float bias = max(0.06 * (1.0 - dot(normalize(pNormal), -lightDir)), 0.005);
+    float bias = max(0.06 * (1.0 - dot(nNormal, -lightDir)), 0.005);
     // float bias = 0.0;
     float shadow0 = projCoords.z - bias > cd0 ? 1.0 : 0.0;
     float shadow1 = projCoords.z - bias > cd1 ? 1.0 : 0.0;
@@ -56,13 +58,35 @@ void main(void) {
     // float illumination = 0.1 + max(0.0, -dot(lightDir, pNormal)) * 0.9;
     // vec3 cNormal = 
 
-    float illumination = 0.1 + max(0.0, -dot(lightDir, normalize(pNormal))) * 0.9 * (1.0 - calculateShadow());
+    vec3 nNormal = normalize(pNormal);
+
+    vec3 normal = texture(normalMap, uvCoords).rgb;
+    normal = normal * 2.0 - 1.0;
+    normal = normalize(TBN * normal);
+
+    float illumination = 0.1 + max(0.0, -dot(lightDir, normal)) * 0.9 * (1.0 - calculateShadow(nNormal));
+
+    float quantized = floor(illumination * 10.0) / 9.0;
+
+    vec3 color;
+
+    if(fragPos.y < 0.1) {
+        if(nNormal.y > 0.8) {
+            color = vec3(1.0, 0.9, 0.6);
+        } else if(nNormal.y < 0.7) {
+            color = vec3(0.7, 0.7, 0.7);
+        } else {
+            color = mix(vec3(0.7, 0.7, 0.7), vec3(1.0, 0.9, 0.6), (nNormal.y - 0.7) * 10.0);
+        }
+    } else {
+        color = vec3(1.0);
+    }
 
     // if(uvCoords.x < 0.03 || uvCoords.x > 0.97 || uvCoords.y < 0.03 || uvCoords.y > 0.97) {
     //     fragColor = vec4(vec3(0), 1.0);
     // } else {
-        fragColor = vec4(texture(tex, uvCoords).rgb * illumination, 1.0);
+        fragColor = vec4(illumination * color, 1.0);
     // }
-    // fragColor = vec4(normalize(pNormal) * illumination, 1.0);
+    // fragColor = vec4(texture(normalMap, uvCoords).rgb, 1.0);
     // fragColor = vec4(vec3(0, 1, 0), 1.0);
 }

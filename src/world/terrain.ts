@@ -11,6 +11,7 @@ export class Floor {
     detailChunks: Model[][];
 
     texture: WebGLTexture;
+    normalTexture: WebGLTexture;
 
     noise: NoiseFunction2D;
 
@@ -25,6 +26,7 @@ export class Floor {
         this.noise = createNoise2D(random);
 
         this.texture = gl.createTexture();
+        this.normalTexture = gl.createTexture();
 
         let texImage = new Image();
         texImage.onload = () => {
@@ -32,7 +34,15 @@ export class Floor {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texImage);
             gl.generateMipmap(gl.TEXTURE_2D);
         };
-        texImage.src = "assests/dirtnormal.png";
+        texImage.src = "assests/floor.png";
+
+        let normalImage = new Image();
+        normalImage.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normalImage);
+            gl.generateMipmap(gl.TEXTURE_2D);
+        };
+        normalImage.src = "assests/dirtnormal.png";
 
         this.chunks = [];
         this.midChunks = [];
@@ -69,7 +79,7 @@ export class Floor {
                 let normal = this.getNormal(i / numTilesX, j / numTilesZ, octaves);
                 vertices.push(i * tileSize + offsetX, height, -j * tileSize - offsetY);
                 normals.push(normal[0], normal[1], normal[2]);
-                uvs.push(i / numTilesX, j / numTilesZ);
+                uvs.push(i / numTilesX * 30, j / numTilesZ * 30);
             }
         }
 
@@ -95,14 +105,15 @@ export class Floor {
     }
 
     getNormal(x: number, z: number, octaves: number): vec3 {
-        let dydx = (this.getHeight(x + 0.0001, z, octaves) - this.getHeight(x - 0.0001, z, octaves)) / 0.02; //this is because 10 chunks
-        let dydz = -(this.getHeight(x, z + 0.0001, octaves) - this.getHeight(x, z - 0.0001, octaves)) / 0.02;
+        let dydx = (this.getHeight(x + 0.0001, z, octaves) - this.getHeight(x - 0.0001, z, octaves)) / 0.002; //this is because 10 chunks
+        let dydz = -(this.getHeight(x, z + 0.0001, octaves) - this.getHeight(x, z - 0.0001, octaves)) / 0.002;
         let cross: vec3 = [-dydx, 1, -dydz]; //v2 x v1
         return vec3.normalize(cross, cross);
     }
 
     draw(shader: BaseShader, camX: number, camZ: number) {
         shader.loadTexture(this.texture, 1);
+        shader.loadTexture(this.normalTexture, 3);
         for(let i = 0; i < 10; i++) {
             for(let j = 0; j < 10; j++) {
                 if(camX / this.width + 0.5 > (i - 1) / 10.0 && camX / this.width + 0.5 < (i + 2) / 10.0 &&
@@ -120,6 +131,7 @@ export class Floor {
 
     drawFullyDetailed(shader: BaseShader) {
         shader.loadTexture(this.texture, 1);
+        shader.loadTexture(this.normalTexture, 3);
         for(let i = 0; i < 10; i++) {
             for(let j = 0; j < 10; j++) {
                 this.detailChunks[i][j].draw(shader);
