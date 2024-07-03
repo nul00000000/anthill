@@ -32,13 +32,13 @@ export class Floor {
         texImage.onload = () => {
             gl.bindTexture(gl.TEXTURE_2D, this.texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texImage);
-            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.generateMipmap(gl.TEXTURE_2D);
         };
-        texImage.src = "assests/floor.png";
+        texImage.src = "assests/terrain.png";
 
         let normalImage = new Image();
         normalImage.onload = () => {
@@ -46,7 +46,7 @@ export class Floor {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normalImage);
             gl.generateMipmap(gl.TEXTURE_2D);
         };
-        normalImage.src = "assests/dirtnormal.jpg";
+        normalImage.src = "assests/tilenormal.png";
 
         this.chunks = [];
         this.midChunks = [];
@@ -56,10 +56,10 @@ export class Floor {
             this.midChunks[i] = [];
             this.detailChunks[i] = [];
             for(let j = 0; j < 10; j++) {
-                this.chunks[i][j] = this.createChunk(i, j, -this.width / 2, -this.length / 2, tileSize, numTilesX, numTilesZ, 6, gl);
-                this.midChunks[i][j] = this.createChunk(i, j, -this.width / 2, -this.length / 2, tileSize * 0.2, 
+                this.chunks[i][j] = this.createChunk(i, j, -this.width / 2, -this.length / 2, tileSize / 2.0, numTilesX * 2, numTilesZ * 2, 6, gl);
+                this.midChunks[i][j] = this.createChunk(i, j, -this.width / 2, -this.length / 2, tileSize / 5.0, 
                     numTilesX * 5, numTilesZ * 5, 6, gl);
-                this.detailChunks[i][j] = this.createChunk(i, j, -this.width / 2, -this.length / 2, tileSize * 0.1, 
+                this.detailChunks[i][j] = this.createChunk(i, j, -this.width / 2, -this.length / 2, tileSize / 10.0, 
                         numTilesX * 10, numTilesZ * 10, 6, gl);
             }
         }
@@ -83,7 +83,7 @@ export class Floor {
                 let normal = this.getNormal(i / numTilesX, j / numTilesZ, octaves);
                 vertices.push(i * tileSize + offsetX, height, -j * tileSize - offsetY);
                 normals.push(normal[0], normal[1], normal[2]);
-                uvs.push(i / numTilesX * 30, j / numTilesZ * 30);
+                uvs.push(i / numTilesX * 300, j / numTilesZ * 300);
             }
         }
 
@@ -95,6 +95,7 @@ export class Floor {
                 indices.push(i * (numTilesX / 10 + 1) + j, (i + 1) * (numTilesX / 10 + 1) + j + 1, i * (numTilesX / 10 + 1) + j + 1);
             }
         }
+        // return new Model(gl, vertices, uvs, indices, false);
         return new Model(gl, vertices, uvs, indices, false, normals);
     }
 

@@ -31,6 +31,7 @@ function init() {
 
 	shadows = new Shadows(gl, renderScene, () => {
 		setLightTowardsCenter([1, 5, 4]);
+		// setLightTowardsCenter([1, 5, 4]);
 		water = new Water(0.1, 100, 100, shadows.shadowsShader, waterShader, gl);
 		water.updateLandOutline(gl, (shader: BaseShader) => {
 			shader.loadTransform(mat4.create());
@@ -111,7 +112,7 @@ function update(delta: number) {
 	if(keys["KeyW"]) {
 		vec3.add(cameraPos, cameraPos, [Math.sin(-cameraYaw) * delta * speed, 0, -Math.cos(-cameraYaw) * delta * speed]);
 	}
-	cameraPos[1] = floor.getHeight(cameraPos[0] / 10 + 0.5, -cameraPos[2] / 10 + 0.5, 7) + 0.1;
+	cameraPos[1] = floor.getHeight(cameraPos[0] / 10 + 0.5, -cameraPos[2] / 10 + 0.5, 6) + 0.1;
 }
 
 function renderScene(shader: BaseShader) {
