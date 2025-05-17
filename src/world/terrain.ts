@@ -3,6 +3,7 @@ import { BaseShader, Shader } from "../graphics/shader";
 import { createNoise2D, NoiseFunction2D } from "simplex-noise";
 import { vec3 } from "gl-matrix";
 import alea from "alea";
+import { flatNormalTexture } from "../graphics/assets";
 
 export class Floor {
 
@@ -10,23 +11,27 @@ export class Floor {
     midChunks: Model[][];
     detailChunks: Model[][];
 
+    numTilesX: number;
+    numTilesZ: number;
+
     texture: WebGLTexture;
-    normalTexture: WebGLTexture;
 
     noise: NoiseFunction2D;
 
     width: number;
     length: number;
 
-    constructor(tileSize: number, numTilesX: number, numTilesZ: number, gl: WebGL2RenderingContext) {
+    constructor(tileSize: number, numTilesX: number, numTilesZ: number, gl: WebGL2RenderingContext, onDone: (floor: Floor) => any) {
         this.width = tileSize * numTilesX;
         this.length = tileSize * numTilesZ;
+
+        this.numTilesX = numTilesX;
+        this.numTilesZ = numTilesZ;
 
         let random = alea(2134);
         this.noise = createNoise2D(random);
 
         this.texture = gl.createTexture();
-        this.normalTexture = gl.createTexture();
 
         let texImage = new Image();
         texImage.onload = () => {
@@ -39,14 +44,6 @@ export class Floor {
             gl.generateMipmap(gl.TEXTURE_2D);
         };
         texImage.src = "assests/terrain.png";
-
-        let normalImage = new Image();
-        normalImage.onload = () => {
-            gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normalImage);
-            gl.generateMipmap(gl.TEXTURE_2D);
-        };
-        normalImage.src = "assests/tilenormal.png";
 
         this.chunks = [];
         this.midChunks = [];
@@ -63,6 +60,8 @@ export class Floor {
                         numTilesX * 10, numTilesZ * 10, 6, gl);
             }
         }
+
+        onDone(this);
         
     }
 
@@ -118,7 +117,7 @@ export class Floor {
 
     draw(shader: BaseShader, camX: number, camZ: number) {
         shader.loadTexture(this.texture, 1);
-        shader.loadTexture(this.normalTexture, 3);
+        shader.loadTexture(flatNormalTexture, 3);
         for(let i = 0; i < 10; i++) {
             for(let j = 0; j < 10; j++) {
                 if(camX / this.width + 0.5 > (i - 1) / 10.0 && camX / this.width + 0.5 < (i + 2) / 10.0 &&
@@ -136,7 +135,7 @@ export class Floor {
 
     drawFullyDetailed(shader: BaseShader) {
         shader.loadTexture(this.texture, 1);
-        shader.loadTexture(this.normalTexture, 3);
+        shader.loadTexture(flatNormalTexture, 3);
         for(let i = 0; i < 10; i++) {
             for(let j = 0; j < 10; j++) {
                 this.detailChunks[i][j].draw(shader);

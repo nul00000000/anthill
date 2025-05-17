@@ -23,11 +23,13 @@ export class Model {
 		gl.bindVertexArray(this.vaoId);
 
 		let p = positions;
+		let u = uvs;
 		let i = indices;
 
 		if(shadeFlat) {
-			let d = this.duplicateVertices(positions, indices);
+			let d = this.duplicateVertices(positions, uvs, indices);
 			p = d.vertices;
+			u = d.uvs;
 			i = d.indices;
 		}
 
@@ -39,7 +41,7 @@ export class Model {
 		}
 
 		let t: GLfloat[], b: GLfloat[];
-		[t, b] = this.calculateTangentBiTangent(p, uvs, i);
+		[t, b] = this.calculateTangentBiTangent(p, u, i);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionVboId);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p), gl.STATIC_DRAW);
@@ -52,7 +54,7 @@ export class Model {
 		gl.enableVertexAttribArray(1);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.uvsVboId);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uvs), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(u), gl.STATIC_DRAW);
 		gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
 		gl.enableVertexAttribArray(2);
 
@@ -71,18 +73,22 @@ export class Model {
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int32Array(i), gl.STATIC_DRAW);
 	}
 
-	duplicateVertices(positions: GLfloat[], indices: GLint[]): {vertices: GLfloat[], indices: GLint[]} {
+	duplicateVertices(positions: GLfloat[], uvs: GLfloat[], indices: GLint[]): 
+			{vertices: GLfloat[], uvs: GLfloat[], indices: GLint[]} {
 		let newVerts: GLfloat[] = [];
+		let newUVS: GLfloat[] = [];
 		let newInds: GLint[] = [];
 
 		for(let i = 0; i < indices.length; i++) {
 			newVerts.push(positions[indices[i] * 3]);
 			newVerts.push(positions[indices[i] * 3 + 1]);
 			newVerts.push(positions[indices[i] * 3 + 2]);
+			newUVS.push(uvs[indices[i] * 2]);
+			newUVS.push(uvs[indices[i] * 2 + 1]);
 			newInds.push(i);
 		}
 
-		return {vertices: newVerts, indices: newInds};
+		return {vertices: newVerts, uvs: newUVS, indices: newInds};
 	}
 
 	calculateNormals(positions: GLfloat[], indices: GLint[]): GLfloat[] {
@@ -114,8 +120,8 @@ export class Model {
 
 		for(let i = 0; i < normals.length / 3; i++) {
 			let len = Math.sqrt(normals[i * 3] * normals[i * 3] + 
-			normals[i * 3 + 1] * normals[i * 3 + 1] +
-			normals[i * 3 + 2] * normals[i * 3 + 2]);
+					normals[i * 3 + 1] * normals[i * 3 + 1] +
+					normals[i * 3 + 2] * normals[i * 3 + 2]);
 			normals[i * 3] /= len;
 			normals[i * 3 + 1] /= len;
 			normals[i * 3 + 2] /= len;

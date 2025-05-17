@@ -225,3 +225,37 @@ export class WaterShader extends BaseShader {
 		this.gl.uniformMatrix4fv(this.uniforms[6], false, lightSpace);
 	}
 }
+
+export class MainShader extends BaseShader {
+	constructor(gl: WebGL2RenderingContext, setupCallback: () => void) {
+		super(gl, "main", ["position", "normal", "uvs", "tangent", "bitangent"], 
+				["transform", "camera", "projection", "lightSpace", "lightDir", 
+				"shadowMap", "tex", "normalMap"], () => {
+			gl.uniform1i(this.uniforms[5], 0);
+			gl.uniform1i(this.uniforms[6], 1);
+			gl.uniform1i(this.uniforms[7], 3);
+			console.log("Main shader initialized");
+			setupCallback();
+		});
+	}
+
+	loadTransform(transform: mat4) {
+		this.gl.uniformMatrix4fv(this.uniforms[0], false, transform);
+	}
+
+	loadCamera(transform: mat4) {
+		this.gl.uniformMatrix4fv(this.uniforms[1], false, transform);
+	}
+
+	loadProjection(transform: mat4) {
+		this.gl.uniformMatrix4fv(this.uniforms[2], false, transform);
+	}
+
+	loadLightSpace(lightSpace: mat4) {
+		this.gl.uniformMatrix4fv(this.uniforms[3], false, lightSpace);
+	}
+
+	loadLightDirection(lightDir: vec3) {
+		this.gl.uniform3fv(this.uniforms[4], vec3.normalize(lightDir, lightDir));
+	}
+}

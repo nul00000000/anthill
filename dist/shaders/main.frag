@@ -60,23 +60,22 @@ void main(void) {
 
     vec3 nNormal = normalize(pNormal);
 
-    vec3 normal = texture(normalMap, uvCoords).rgb;
-    normal = normal * 2.0 - 1.0;
-    normal = normalize(TBN * normal);
+    // vec3 normal = texture(normalMap, uvCoords).rgb;
+    // normal = normal * 2.0 - 1.0;
+    // normal = normalize(TBN * normal);
+
+    vec3 normal = nNormal;
 
     float illumination = 0.2 + max(0.0, -dot(lightDir, normal)) * 0.8 * (1.0 - calculateShadow(nNormal));
 
     float quantized = floor(illumination * 16.0) / 15.0;
 
-    vec3 color = texture(tex, vec2(nNormal.y,  -fragPos.y * 0.5 + 0.5)).rgb;
-
-    // vec3 color = texture(tex, uvCoords).rgb;
+    vec3 color = texture(tex, uvCoords).rgb;
 
     // if(uvCoords.x < 0.03 || uvCoords.x > 0.97 || uvCoords.y < 0.03 || uvCoords.y > 0.97) {
     //     fragColor = vec4(vec3(0), 1.0);
     // } else {
         fragColor = vec4(quantized * color, 1.0);
     // }
-    // fragColor = vec4(nNormal, 1.0);
-    // fragColor = vec4(vec3(0, 1, 0), 1.0);
+    // fragColor = vec4(normal, 1.0);
 }

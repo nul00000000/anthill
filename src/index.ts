@@ -1,9 +1,11 @@
 import { mat4, vec3 } from "gl-matrix";
 import { Model } from "./graphics/model";
-import { Shader, BaseShader, WaterShader } from "./graphics/shader";
+import { Shader, BaseShader, WaterShader, MainShader } from "./graphics/shader";
 import { Shadows } from "./graphics/shadows";
 import { Floor } from "./world/terrain";
 import { Water } from "./world/water";
+import { Tree } from "./world/tree";
+import { initAssets } from "./graphics/assets";
 
 let gl: WebGL2RenderingContext;
 let canvas: HTMLCanvasElement;
@@ -12,6 +14,8 @@ let shader: Shader;
 let shadows: Shadows;
 
 let waterShader: WaterShader;
+
+let mainShader: MainShader;
 
 let cube: Model;
 let plane: Model;
@@ -26,10 +30,12 @@ let keys: {[id: string] : boolean} = {};
 let floor: Floor;
 let water: Water;
 
+let trees: Tree[] = [];
+
 function init() {
 	shader.use();
 
-	shadows = new Shadows(gl, renderScene, () => {
+	shadows = new Shadows(gl, (shader) => {renderFloor(shader); renderMain(shader);}, () => {
 		setLightTowardsCenter([1, 5, 4]);
 		// setLightTowardsCenter([1, 5, 4]);
 		water = new Water(0.1, 100, 100, shadows.shadowsShader, waterShader, gl);
@@ -39,7 +45,19 @@ function init() {
 		});
 	});
 
-	floor = new Floor(0.1, 100, 100, gl);
+	initAssets(gl);
+
+	floor = new Floor(0.1, 100, 100, gl, (floor: Floor) => {
+		for(let i = 0; i < 20; i++) {
+			let x = Math.random() * 10 - 5;
+			let z = Math.random() * 10 - 5;
+			if(floor.getHeight(x / 10 + 0.5, -z / 10 + 0.5, 6) < 0.1) {
+				i--;
+				continue;
+			}
+			trees.push(new Tree(x, z, 0.6, 1, floor, gl));
+		}
+	});
 
 	cube = new Model(gl, [
 		-0.5, -0.5, -0.5, 
@@ -93,6 +111,9 @@ function init() {
 	waterShader.use();
 	waterShader.loadProjection(projection);
 
+	mainShader.use();
+	mainShader.loadProjection(projection);
+
 	console.log("Game initialized");
 	window.requestAnimationFrame(loop);
 }
@@ -115,11 +136,12 @@ function update(delta: number) {
 	cameraPos[1] = floor.getHeight(cameraPos[0] / 10 + 0.5, -cameraPos[2] / 10 + 0.5, 6) + 0.1;
 }
 
-function renderScene(shader: BaseShader) {
+function renderFloor(shader: BaseShader) {
 	let translation = mat4.create();
 
-	mat4.translate(translation, translation, [0, 2, 0]);
+	mat4.translate(translation, translation, [0, 1, 1]);
 	mat4.rotateY(translation, translation, testAngle);
+	mat4.scale(translation, translation, [0.1, 0.1, 0.1]);
 
 	shader.loadTransform(translation);
 	
@@ -128,6 +150,15 @@ function renderScene(shader: BaseShader) {
 	shader.loadTransform(mat4.create());
 
 	floor.draw(shader, cameraPos[0], cameraPos[2]);
+
+	// setLightTowardsCenter([Math.cos(testAngle) * 5, 5, Math.sin(testAngle) * 5]);
+}
+
+function renderMain(shader: BaseShader) {
+
+	for(let i = 0; i < trees.length; i++) {
+		trees[i].draw(shader);
+	}
 
 	// setLightTowardsCenter([Math.cos(testAngle) * 5, 5, Math.sin(testAngle) * 5]);
 }
@@ -168,7 +199,12 @@ function draw(gl: WebGL2RenderingContext) {
 	// shader.loadProjection(mat4.create());
 	// shader.loadCamera(camera);
 
-	renderScene(shader);
+	renderFloor(shader);
+
+	mainShader.use();
+	mainShader.loadCamera(camera);
+
+	renderMain(mainShader);
 
 	if(water) {
 		waterShader.use();
@@ -190,6 +226,10 @@ function setLightTowardsCenter(lightPos: vec3) {
 	waterShader.use();
 	waterShader.loadLightSpace(lsm);
 	waterShader.loadLightDirection([-lightPos[0], -lightPos[1], -lightPos[2]]);
+
+	mainShader.use();
+	mainShader.loadLightSpace(lsm);
+	mainShader.loadLightDirection([-lightPos[0], -lightPos[1], -lightPos[2]]);
 }
 
 function loop(timestamp: number) {
@@ -217,7 +257,9 @@ function main() {
 	}
 
 	shader = new Shader(gl, () => {
-		waterShader = new WaterShader(gl, init);
+		mainShader = new MainShader(gl, () => {
+			waterShader = new WaterShader(gl, init);
+		});
 	});
 }
 
