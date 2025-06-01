@@ -6,6 +6,7 @@ import { Floor } from "./world/terrain";
 import { Water } from "./world/water";
 import { Tree } from "./world/tree";
 import { initAssets } from "./graphics/assets";
+import { worldRand } from "./util/random";
 
 let gl: WebGL2RenderingContext;
 let canvas: HTMLCanvasElement;
@@ -49,8 +50,8 @@ function init() {
 
 	floor = new Floor(0.1, 100, 100, gl, (floor: Floor) => {
 		for(let i = 0; i < 20; i++) {
-			let x = Math.random() * 10 - 5;
-			let z = Math.random() * 10 - 5;
+			let x = worldRand() * 10 - 5;
+			let z = worldRand() * 10 - 5;
 			if(floor.getHeight(x / 10 + 0.5, -z / 10 + 0.5, 6) < 0.1) {
 				i--;
 				continue;
