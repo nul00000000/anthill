@@ -100,7 +100,7 @@ export class Tree {
         let indices: number[] = [];
         for(let j = 0; j < numSegs; j++) {
             let groundNorm = terrain.getNormal(x / 10 + 0.5, -z / 10 + 0.5, 6);
-            // groundNorm = vec3.
+            groundNorm = vec3.lerp(groundNorm, groundNorm, [0, 1, 0], 0.5);
             let tangent: vec3 = [-groundNorm[1], groundNorm[0], 0];
             vec3.normalize(tangent, tangent);
             let bitangent: vec3 = [0, 0, 0];
