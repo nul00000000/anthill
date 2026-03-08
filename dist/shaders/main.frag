@@ -75,6 +75,7 @@ void main(void) {
     // if(uvCoords.x < 0.03 || uvCoords.x > 0.97 || uvCoords.y < 0.03 || uvCoords.y > 0.97) {
     //     fragColor = vec4(vec3(0), 1.0);
     // } else {
+        //fragColor = vec4(color, 1.0);
         fragColor = vec4(quantized * color, 1.0);
     // }
     // fragColor = vec4(normal, 1.0);

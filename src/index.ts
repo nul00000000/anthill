@@ -56,7 +56,7 @@ function init() {
 				i--;
 				continue;
 			}
-			trees.push(new Tree(x, z, 0.6, 1, floor, gl));
+			trees.push(new Tree(x, z, 0.3, 1, floor, gl));
 		}
 	});
 
