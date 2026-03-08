@@ -259,10 +259,51 @@ export class Tree {
         let uvs: number[] = [];
         let indices: number[] = [];
         for(let j = 0; j < numSegs; j++) {
-			//addBranch(vertices, uvs, indices, 0, 0.15, 0, 0.03, this.terrain.getNormal(x, z, 6), segHeight);
-			let groundNorm = this.terrain.getNormal(x / 10 + 0.5, -z / 10 + 0.5, 6);
-			treeBranches(0, 0, 0, vertices, uvs, indices, 0.03, groundNorm, groundNorm, 0.15, 10);
-			console.log("Tree with " + (vertices.length / 3) + " vertices and " + (indices.length) + " triangles");
+            let groundNorm = terrain.getNormal(x / 10 + 0.5, -z / 10 + 0.5, 6);
+            groundNorm = vec3.lerp(groundNorm, groundNorm, [0, 1, 0], 0.5);
+            let tangent: vec3 = [-groundNorm[1], groundNorm[0], 0];
+            vec3.normalize(tangent, tangent);
+            let bitangent: vec3 = [0, 0, 0];
+            vec3.cross(bitangent, groundNorm, tangent);
+
+            let TBN: mat3 = [tangent[0], tangent[1], tangent[2], 
+                            groundNorm[0], groundNorm[1], groundNorm[2],
+                            bitangent[0], bitangent[1], bitangent[2]];
+
+            let tip: vec3 = [0, segHeight * (j + 1), 0];
+
+            vec3.transformMat3(tip, tip, TBN);
+
+            for(let i = 0; i < 6; i++) {
+
+                let angle = i * Math.PI / 3;
+                let angleLeft = (i - 1) * Math.PI / 3;
+                let indicesBase = vertices.length / 3;
+
+                let bottomRight: vec3 = [Math.cos(angle) * 0.06, j * segHeight, Math.sin(angle) * 0.06];
+                let topRight: vec3 = [Math.cos(angle) * 0.06, (j + 1) * segHeight, Math.sin(angle) * 0.06];
+                let topLeft: vec3 = [Math.cos(angleLeft) * 0.06, (j + 1) * segHeight, Math.sin(angleLeft) * 0.06];
+                let bottomLeft: vec3 = [Math.cos(angleLeft) * 0.06, j * segHeight, Math.sin(angleLeft) * 0.06];
+
+                vec3.transformMat3(bottomRight, bottomRight, TBN);
+                vec3.transformMat3(topRight, topRight, TBN);
+                vec3.transformMat3(topLeft, topLeft, TBN);
+                vec3.transformMat3(bottomLeft, bottomLeft, TBN);
+
+                vertices.push(bottomRight[0], bottomRight[1], bottomRight[2]);
+                vertices.push(topRight[0], topRight[1], topRight[2]);
+                vertices.push(topLeft[0], topLeft[1], topLeft[2]);
+                vertices.push(bottomLeft[0], bottomLeft[1], bottomLeft[2]);
+
+                uvs.push(0, 0);
+                uvs.push(0, 0.1);
+                uvs.push(0.1, 0.1);
+                uvs.push(0.1, 0);
+
+                indices.push(indicesBase + 0, indicesBase + 1, indicesBase + 2);
+                indices.push(indicesBase + 0, indicesBase + 2, indicesBase + 3);
+            }
+            addIcosehedron(vertices, uvs, indices, tip[0], tip[1], tip[2], 0.16);
         }
 
         this.mesh = new Model(gl, vertices, uvs, indices, true);
