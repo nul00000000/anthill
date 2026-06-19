@@ -67,9 +67,7 @@ export class Floor {
 
     createChunk(xIndex: number, zIndex: number, offsetX: number, offsetY: number, tileSize: number, 
             numTilesX: number, numTilesZ: number, octaves: number, gl: WebGL2RenderingContext): Model {
-        let vertices: number[] = [];
-        let uvs: number[] = [];
-        let normals: number[] = [];
+	let data: number[][][] = [];
 
         let startX = xIndex * numTilesX / 10;
         let endX = (xIndex + 1) * numTilesX / 10;
@@ -85,6 +83,20 @@ export class Floor {
                 uvs.push(i / numTilesX * 300, j / numTilesZ * 300);
             }
         }
+
+	for(let i = startX; i <= endX; i++) {
+		data.push([]);
+		for(let j = 0; j < 100; j++) {
+			data[data.length - 1].push([]);
+			for(let k = startZ; k < endZ; k++) {
+				let x = (i - 5) / 3;
+				let y = (j - 5) / 3;
+				let z = (k - 5) / 3;
+				let height = this.getHeight(i / numTilesX, k / numTilesZ, octave);
+				data[data.length - 1][data[data.length - 1].length - 1].push(j > height);
+			}
+		}
+	}
 
         let indices: number[] = [];
 

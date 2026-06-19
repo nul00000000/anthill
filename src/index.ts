@@ -7,6 +7,7 @@ import { Water } from "./world/water";
 import { Tree } from "./world/tree";
 import { initAssets } from "./graphics/assets";
 import { worldRand } from "./util/random";
+import { cubeMarch } from "./world/cubemarcher";
 
 let gl: WebGL2RenderingContext;
 let canvas: HTMLCanvasElement;
@@ -21,6 +22,8 @@ let mainShader: MainShader;
 let cube: Model;
 let plane: Model;
 let testAngle = 0;
+
+let cubeMarched: Model;
 
 let cameraPos: vec3 = [0, 1.5, 0];
 let cameraYaw: number = 0;
@@ -99,6 +102,8 @@ function init() {
 		[
 			0, 3, 1, 1, 3, 2
 		], false);
+
+	let data: number[][][] = [];
 
 	let fov = 45 * Math.PI / 180; //this has been vertical fov the whole time
 	let aspect = (gl.canvas as HTMLCanvasElement).clientWidth / (gl.canvas as HTMLCanvasElement).clientHeight;
